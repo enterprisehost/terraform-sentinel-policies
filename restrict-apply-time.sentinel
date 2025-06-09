@@ -1,0 +1,26 @@
+import "time"
+import "tfplan/v2"
+import "tfconfig/v2"
+import "tfstate/v2"
+import "tfrun"
+
+# Allow all plans
+main = rule {
+    tfrun.action is "plan" or allowed_apply_time
+}
+
+# Allow apply only between 5:00 and 6:00 IST
+allowed_apply_time = rule {
+    tfrun.action is "apply" and is_ist_time_allowed
+}
+
+# Check if current time in IST is between 5:00 and 6:00
+is_ist_time_allowed = func() {
+    now_utc = time.now()
+    # IST is UTC+5:30
+    ist_offset = 5 * 60 * 60 + 30 * 60
+    now_ist = now_utc.add_seconds(ist_offset)
+    hour = now_ist.hour
+    # Allow only if hour is 5 (i.e., 5:00 <= time < 6:00)
+    hour == 5
+}
